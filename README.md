@@ -11,5 +11,6 @@ pip install python-dotenv
 pip install mypy
 pip install poetry
 python.exe -m pip install --upgrade pip
+pip install pandas openpyxl
 
 '''
