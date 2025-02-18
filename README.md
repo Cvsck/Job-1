@@ -14,6 +14,23 @@ pip install python-dotenv
 pip install mypy
 pip install poetry
 python.exe -m pip install --upgrade pip
+pip install pandas
 pip install pandas openpyxl
-
+python -m pip install eodhd -U
+'''
+2. Создание модулей:
+'''
+main
+reports
+services
+utils
+views
+'''
+3. Приведение модулей к PEP8:
+'''
+Пример:
+flake8 src/main.py
+isort src/main.py
+black src/main.py
+mypy src/main.py
 '''
