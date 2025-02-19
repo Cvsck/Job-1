@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 from config import excel_file_path
 
-# Загрузка переменных окружения из файла .env
+
 load_dotenv()
 
 
@@ -72,32 +72,27 @@ def get_main_page(date: str, transactions_path: str) -> str:
         return top_transactions_list
 
     def get_currency_rates() -> list:
-        apikey = os.getenv("API_KEY")
-
-        if not apikey:
-            print("Ошибка: API ключ не найден. Убедитесь, что он задан в переменной окружения.")
-            return []
-
-        url = f"https://v6.exchangerate-api.com/v6/{apikey}/latest/USD"
-        headers = {"apikey": f"{apikey}"}
-        response = requests.get(url, headers=headers)
-
-        if response.status_code != 200:
-            print(f"Ошибка запроса: статус {response.status_code}")
-            return []
-
-        response_data = response.json()
-
-        if response_data["result"] != "success":
-            print("Ошибка: не удалось получить курсы валют")
-            return []
-
-        currencies = ["USD", "EUR"]
+        api_key = os.getenv("API_KEY")  # используем переменную окружения для API ключа
+        currencies = ['USD', 'EUR']
         currency_rates = []
+
         for currency in currencies:
-            if currency in response_data["conversion_rates"]:
-                currency_rates.append({"currency": currency, "rate": response_data["conversion_rates"][currency]})
+            url = f"https://v6.exchangerate-api.com/v6/{api_key}/latest/{currency}"
+            response = requests.get(url)
+            data = response.json()
+
+            # Выводим данные для проверки
+            print(f"Data for {currency}: {data}")
+
+            if 'conversion_rates' in data:
+                rate = round(data['conversion_rates'].get('RUB', 0.0), 2)
+                currency_rates.append({
+                    'currency': currency,
+                    'rate': rate
+                })
+
         return currency_rates
+
 
     def get_stock_prices(stocks: list) -> dict:
         api_key = os.environ.get("api_stock")
@@ -136,7 +131,7 @@ def get_main_page(date: str, transactions_path: str) -> str:
 
     cards = get_cards(df_transactions)
     top_transactions = get_top_transactions(df_transactions)
-    currency_rates = get_currency_rates()  # Получаем курсы валют
+    currency_rates = get_currency_rates()
     stock_prices = get_stock_prices(stocks)
     final_response = {
         "greeting": greeting,

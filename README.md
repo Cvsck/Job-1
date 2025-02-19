@@ -17,6 +17,9 @@ python.exe -m pip install --upgrade pip
 pip install pandas
 pip install pandas openpyxl
 python -m pip install eodhd -U
+pip install pytest
+pip install pytest-cov
+
 '''
 2. Создание модулей:
 '''
