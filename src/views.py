@@ -6,9 +6,7 @@ import pandas as pd
 import requests
 from dotenv import load_dotenv
 
-
 from config import excel_file_path
-
 
 load_dotenv()
 
@@ -73,7 +71,7 @@ def get_main_page(date: str, transactions_path: str) -> str:
 
     def get_currency_rates() -> list:
         api_key = os.getenv("API_KEY")  # используем переменную окружения для API ключа
-        currencies = ['USD', 'EUR']
+        currencies = ["USD", "EUR"]
         currency_rates = []
 
         for currency in currencies:
@@ -84,15 +82,11 @@ def get_main_page(date: str, transactions_path: str) -> str:
             # Выводим данные для проверки
             print(f"Data for {currency}: {data}")
 
-            if 'conversion_rates' in data:
-                rate = round(data['conversion_rates'].get('RUB', 0.0), 2)
-                currency_rates.append({
-                    'currency': currency,
-                    'rate': rate
-                })
+            if "conversion_rates" in data:
+                rate = round(data["conversion_rates"].get("RUB", 0.0), 2)
+                currency_rates.append({"currency": currency, "rate": rate})
 
         return currency_rates
-
 
     def get_stock_prices(stocks: list) -> dict:
         api_key = os.environ.get("api_stock")

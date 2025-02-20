@@ -19,6 +19,8 @@ pip install pandas openpyxl
 python -m pip install eodhd -U
 pip install pytest
 pip install pytest-cov
+pip install pytest-html
+pytest --cov=src --cov-report=html:htmlcov --html=report.html
 
 '''
 2. Создание модулей:

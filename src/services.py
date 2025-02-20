@@ -1,59 +1,91 @@
-import pandas as pd
 import json
 import os
-from config import excel_file_path
+from datetime import datetime
+from typing import Any, Dict, List
 
-def analyze_cashback_categories_on_excel(file_path: str, year: int, month: int) -> str:
-    """
-    Функция анализирует транзакции из Excel файла и рассчитывает кешбэк по категориям для указанного года и месяца.
-    """
-    if not os.path.exists(file_path):
-        print("Файл не найден.")
-        return json.dumps({"error": "Файл не найден."})
+from openpyxl import load_workbook
 
-    df_read = pd.read_excel(file_path)
 
-    necessary_columns = ['Дата операции', 'Категория', 'Сумма операции']
-    for nec in necessary_columns:
-        if nec not in df_read.columns:
-            return json.dumps({"error": f"Отсутствует обязательный столбец: {nec}"})
+def parse_date(date_str: str) -> datetime:
+    """Преобразование строки даты в объект datetime."""
+    if date_str is None:
+        return None
+    try:
+        return datetime.strptime(date_str, "%d.%m.%Y")
+    except (ValueError, TypeError):
+        return None
 
-    df_read['Дата операции'] = pd.to_datetime(df_read['Дата операции'], errors='coerce', dayfirst=True)
 
-    if df_read['Дата операции'].isna().any():
-        return json.dumps({"error": "Некорректные даты в данных."})
+def filter_transactions_by_date(transactions: List[Dict[str, Any]], year: int, month: int) -> List[Dict[str, Any]]:
+    """Фильтрация транзакций по году и месяцу."""
+    return [
+        record
+        for record in transactions
+        if record["Дата операции"]
+        and isinstance(record["Дата операции"], datetime)
+        and record["Дата операции"].year == year
+        and record["Дата операции"].month == month
+        and abs(record["Сумма операции"]) >= 1
+    ]
 
-    filter_df = df_read[(df_read['Дата операции'].dt.year == year) & (df_read['Дата операции'].dt.month == month)]
-    filter_df = filter_df[filter_df['Сумма операции'].abs() >= 1]
 
-    if filter_df.empty:
+def calculate_cashback_by_category(filtered_transactions: List[Dict[str, Any]]) -> Dict[str, float]:
+    """Расчет кешбэка по категориям."""
+    cashback_by_category = {}
+    cashback_rate = 0.01
+
+    for transaction in filtered_transactions:
+        category = transaction["Категория"]
+        amount = abs(transaction["Сумма операции"])
+
+        cashback = amount * cashback_rate
+
+        if category in cashback_by_category:
+            cashback_by_category[category] += cashback
+        else:
+            cashback_by_category[category] = cashback
+
+    return {category: round(cashback, 2) for category, cashback in cashback_by_category.items()}
+
+
+def analyze_cashback_categories(transactions_data: List[Dict[str, Any]], filter_year: int, filter_month: int) -> str:
+    """Основная функция анализа кешбэка по категориям."""
+
+    for record in transactions_data:
+        record["Дата операции"] = parse_date(record.get("Дата операции") or record.get("Дата платежа"))
+
+    filtered_transactions = filter_transactions_by_date(transactions_data, filter_year, filter_month)
+
+    if not filtered_transactions:
         return json.dumps({})
 
-    def calculate_cashback_by_category(filtered_data: pd.DataFrame) -> dict:
-        cashback_by_category = {}
-        cashback_rate = 0.01
+    cashback_by_category = calculate_cashback_by_category(filtered_transactions)
 
-        for _, transaction in filtered_data.iterrows():
-            category = transaction['Категория']
-            amount = abs(transaction['Сумма операции'])
-
-            cashback = round(amount * cashback_rate, 2)
-
-            if category in cashback_by_category:
-                cashback_by_category[category] += cashback
-            else:
-                cashback_by_category[category] = cashback
-
-        cashback_by_category = {category: round(cashback, 2) for category, cashback in cashback_by_category.items()}
-
-        return cashback_by_category
-
-    cashback_by_category = calculate_cashback_by_category(filter_df)
-    sorted_cashback_by_category = dict(sorted(cashback_by_category.items(), key=lambda item: item[1], reverse=True))
-
-    result_json = json.dumps(sorted_cashback_by_category, ensure_ascii=False, indent=4)
+    result_json = json.dumps(cashback_by_category, ensure_ascii=False, indent=4)
 
     return result_json
 
-result = analyze_cashback_categories_on_excel(excel_file_path, 2021, 3)
-print(result)
+
+def load_data_from_excel(excel_file_path: str) -> List[Dict[str, Any]]:
+    """Загрузка данных из Excel файла."""
+    if not os.path.exists(excel_file_path):
+        raise FileNotFoundError(f"Файл не найден: {excel_file_path}")
+
+    workbook = load_workbook(excel_file_path)
+    sheet = workbook.active
+
+    header = [cell.value for cell in sheet[1]]
+    data = []
+    for row in sheet.iter_rows(min_row=2, values_only=True):
+        data.append(dict(zip(header, row)))
+
+    return data
+
+
+if __name__ == "__main__":
+    excel_path = "C:\\Users\\Макс\\my_prj\\Job-1\\data\\operations.xlsx"
+    transaction_records = load_data_from_excel(excel_path)
+    year_2021 = 2021
+    month_march = 3
+    result = analyze_cashback_categories(transaction_records, year_2021, month_march)
+    print(result)
