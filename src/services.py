@@ -13,7 +13,10 @@ def parse_date(date_str: str) -> datetime:
     try:
         return datetime.strptime(date_str, "%d.%m.%Y")
     except (ValueError, TypeError):
-        return None
+        try:
+            return datetime.strptime(date_str, "%d.%m.%Y %H:%M:%S")
+        except (ValueError, TypeError):
+            return None
 
 
 def filter_transactions_by_date(transactions: List[Dict[str, Any]], year: int, month: int) -> List[Dict[str, Any]]:
@@ -50,7 +53,6 @@ def calculate_cashback_by_category(filtered_transactions: List[Dict[str, Any]]) 
 
 def analyze_cashback_categories(transactions_data: List[Dict[str, Any]], filter_year: int, filter_month: int) -> str:
     """Основная функция анализа кешбэка по категориям."""
-
     for record in transactions_data:
         record["Дата операции"] = parse_date(record.get("Дата операции") or record.get("Дата платежа"))
 
@@ -82,10 +84,24 @@ def load_data_from_excel(excel_file_path: str) -> List[Dict[str, Any]]:
     return data
 
 
+def save_result_to_file(result: str, output_file_path: str) -> None:
+    """Сохранение результата в файл JSON."""
+    with open(output_file_path, "w", encoding="utf-8") as file:
+        file.write(result)
+
+
 if __name__ == "__main__":
-    excel_path = "C:\\Users\\Макс\\my_prj\\Job-1\\data\\operations.xlsx"
-    transaction_records = load_data_from_excel(excel_path)
-    year_2021 = 2021
-    month_march = 3
-    result = analyze_cashback_categories(transaction_records, year_2021, month_march)
-    print(result)
+    try:
+        excel_path = "C:\\Users\\Макс\\my_prj\\Job-1\\data\\operations.xlsx"
+        output_file_path = "C:\\Users\\Макс\\my_prj\\Job-1\\data\\result.json"
+        print(f"Загрузка данных из файла: {excel_path}")
+        transaction_records = load_data_from_excel(excel_path)
+        print(f"Данные загружены: {transaction_records}")
+        year_2021 = 2021
+        month_march = 3
+        result = analyze_cashback_categories(transaction_records, year_2021, month_march)
+        print(f"Результат анализа: {result}")
+        save_result_to_file(result, output_file_path)
+        print(f"Результат сохранен в файл: {output_file_path}")
+    except Exception as e:
+        print(f"Произошла ошибка: {e}")
