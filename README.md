@@ -39,3 +39,4 @@ isort src/main.py
 black src/main.py
 mypy src/main.py
 '''
+4. В папке Tests добавлены тесты к модулям
