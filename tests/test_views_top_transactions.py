@@ -17,6 +17,7 @@ def get_top_transactions(transactions: pd.DataFrame) -> list:
     ]
     return top_transactions_list
 
+
 @pytest.fixture
 def transactions():
     data = {
@@ -24,9 +25,10 @@ def transactions():
         "Статус": ["OK", "OK", "OK", "Failed", "OK", "OK"],
         "Сумма платежа": [1000, 2000, 3000, 4000, 500, 1500],
         "Категория": ["Еда", "Транспорт", "Медицина", "Развлечения", "Еда", "Одежда"],
-        "Описание": ["Обед", "Такси", "Аптека", "Кино", "Завтрак", "Футболка"]
+        "Описание": ["Обед", "Такси", "Аптека", "Кино", "Завтрак", "Футболка"],
     }
     return pd.DataFrame(data)
+
 
 def test_get_top_transactions(transactions):
     result = get_top_transactions(transactions)
@@ -35,6 +37,6 @@ def test_get_top_transactions(transactions):
         {"date": "2025-02-18", "amount": 2000, "category": "Транспорт", "description": "Такси"},
         {"date": "2025-02-14", "amount": 1500, "category": "Одежда", "description": "Футболка"},
         {"date": "2025-02-19", "amount": 1000, "category": "Еда", "description": "Обед"},
-        {"date": "2025-02-15", "amount": 500, "category": "Еда", "description": "Завтрак"}
+        {"date": "2025-02-15", "amount": 500, "category": "Еда", "description": "Завтрак"},
     ]
     assert result == expected_result

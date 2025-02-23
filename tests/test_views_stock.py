@@ -1,18 +1,19 @@
+# -*- coding: utf-8 -*-
 import os
 from unittest.mock import Mock
 
 import requests
 
 
-def get_stock_prices(stocks: list) -> dict:
+def get_stock_prices(stock_list: list) -> dict:
     api_key = os.environ.get("api_stock")
 
     if not api_key:
-        print("Ошибка: API ключ не найден. Убедитесь, что он задан в переменной окружения.")
+        print("Ошибка: API ключ не найден. Убедитесь, что он задан в переменной окружении.")
         return {"stock_prices": []}
 
     stock_prices = []
-    for stock in stocks:
+    for stock in stock_list:
         url = f"https://eodhd.com/api/real-time/{stock}.US?api_token={api_key}&fmt=json"
         response = requests.get(url)
 
@@ -36,9 +37,6 @@ def get_stock_prices(stocks: list) -> dict:
     return {"stock_prices": stock_prices}
 
 
-stocks = ["AAPL", "AMZN", "GOOGL", "MSFT", "TSLA"]
-
-
 def test_successful_response():
     os.environ["api_stock"] = "fake_api_key"
     mock_response = Mock()
@@ -50,5 +48,5 @@ def test_successful_response():
     assert result == {"stock_prices": [{"stock": "AAPL", "price": 150.0}]}
 
 
-
+# Запускаем тест
 test_successful_response()

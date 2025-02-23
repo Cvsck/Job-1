@@ -1,11 +1,13 @@
-import os
 import json
+import os
 from datetime import datetime
+
 import pandas as pd
 import requests
 from dotenv import load_dotenv
 
 load_dotenv()
+
 
 def greet() -> str:
     current_hour = datetime.now().hour
@@ -17,6 +19,7 @@ def greet() -> str:
         return "Добрый вечер"
     else:
         return "Доброй ночи"
+
 
 def get_cards(transactions: pd.DataFrame) -> list:
     card_data = {}
@@ -44,6 +47,7 @@ def get_cards(transactions: pd.DataFrame) -> list:
     print(f"Карты обработаны: {result}")
     return result
 
+
 def get_top_transactions(transactions: pd.DataFrame) -> list:
     successful_transactions = transactions[transactions["Статус"] == "OK"]
     top_transactions = successful_transactions.sort_values(by="Сумма операции", ascending=False).head(5)
@@ -61,6 +65,7 @@ def get_top_transactions(transactions: pd.DataFrame) -> list:
     print(f"Топ транзакций: {top_transactions_list}")
     return top_transactions_list
 
+
 def get_currency_rates(user_settings_path: str) -> list:
     with open(user_settings_path, "r") as f:
         user_settings = json.load(f)
@@ -75,11 +80,15 @@ def get_currency_rates(user_settings_path: str) -> list:
         response = requests.get(url)
         data = response.json()
 
+        # Логирование ответа
+        print(f"Ответ от API для {currency}: {data}")
+
         if "conversion_rates" in data:
             rate = round(data["conversion_rates"].get("RUB", 0.0), 2)
             currency_rates.append({"currency": currency, "rate": rate})
 
     return currency_rates
+
 
 def get_stock_prices(user_settings_path: str) -> dict:
     with open(user_settings_path, "r") as f:
@@ -96,6 +105,9 @@ def get_stock_prices(user_settings_path: str) -> dict:
     for stock in stocks:
         url = f"https://eodhd.com/api/real-time/{stock}.US?api_token={api_key}&fmt=json"
         response = requests.get(url)
+
+        # Логирование ответа
+        print(f"Ответ от API для {stock}: {response.json()}")
 
         if response.status_code != 200:
             print(f"Ошибка запроса: статус {response.status_code} для {stock}")

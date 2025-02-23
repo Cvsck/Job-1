@@ -1,77 +1,47 @@
-import json
-from datetime import datetime
-from unittest.mock import call, mock_open, patch
+import os
 
-from src.reports import log_report_to_file
+import pandas as pd
+import pytest
 
-
-
-@log_report_to_file()
-def generate_report():
-    return {"data": "sample report"}
+from src.reports import spending_by_category
 
 
-# Тест 1: Проверка записи в файл с автоматически сгенерированным именем
-@patch("builtins.open", new_callable=mock_open)
-@patch("logging.info")
-def test_log_report_to_file_default(mock_logging, mock_open_file):
-    # Поскольку имя файла не передано, будет использоваться автоматическое имя
-    now = datetime.now().strftime('%Y%m%d_%H%M%S')
-    expected_filename = f"../data/report_{now}.json"
-
-    # Вызываем функцию с декоратором
-    result = generate_report()
-
-    # Проверка результата
-    assert result == {"data": "sample report"}
-
-    # Проверяем, что файл был открыт для записи с правильным именем
-    mock_open_file.assert_called_once_with(expected_filename, 'w', encoding='utf-8')
-
-    # Ожидаем строку JSON с отступами
-    expected_json = json.dumps(result, ensure_ascii=False, indent=4)
-
-    # Получаем строку, записанную методом write
-    written_data = ''.join(call[0][0] for call in mock_open_file().write.call_args_list)
-
-    # Проверяем, что данные соответствуют JSON
-    assert written_data == expected_json
-
-    # Проверяем, логирование
-    mock_logging.assert_called_once_with(f"Отчет записан в файл: {expected_filename}")
+# Создаем тестовые данные для транзакций
+@pytest.fixture
+def transaction_data():
+    data = {
+        "Дата операции": ["2022-01-10", "2022-02-15", "2022-03-20", "2022-01-25", "2022-04-05"],
+        "Категория": ["Супермаркеты", "Супермаркеты", "Супермаркеты", "Рестораны", "Супермаркеты"],
+        "Сумма": [100, 150, 200, 250, 300],
+    }
+    # Преобразуем столбец 'Дата операции' в datetime с явным указанием формата
+    df = pd.DataFrame(data)
+    df["Дата операции"] = pd.to_datetime(df["Дата операции"], format="%Y-%m-%d", errors="coerce")
+    return df
 
 
-# Тест 2: Проверка записи в файл с переданным именем
-@patch("builtins.open", new_callable=mock_open)
-@patch("logging.info")
-def test_log_report_to_file_with_filename(mock_logging, mock_open_file):
+def test_spending_by_category(transaction_data):
+    # Удаляем файл отчета, если он существует
+    if os.path.exists("../data/spending_by_category_report.json"):
+        os.remove("../data/spending_by_category_report.json")
 
-    filename = "custom_report.json"
+    # Выполняем тестируемую функцию
+    result = spending_by_category(
+        transaction_data, category="Супермаркеты", start_date="2022-01-01", end_date="2022-03-31"
+    )
 
-    # Производим подмену файла генератора
-    with patch('datetime.datetime') as mock_datetime:
-        mock_datetime.now.return_value = datetime(2025, 2, 15, 19, 35, 32)  # Фиксированная дата и время
-        result = generate_report(filename=filename)  # Передаем имя файла в тестируемую функцию
+    # Проверяем, что результат содержит правильное количество записей
+    assert len(result) == 3
 
-    # Проверяем, результата
-    assert result == {"data": "sample report"}
+    # Проверяем, что файл отчета был создан
+    assert os.path.exists("../data/spending_by_category_report.json")
 
-    # Проверяем, что файл был открыт с переданным именем
-    mock_open_file.assert_called_once_with(filename, 'w', encoding='utf-8')
+    # Проверяем, что содержимое файла соответствует ожиданиям
+    report_data = pd.read_json("../data/spending_by_category_report.json", orient="records")
+    assert len(report_data) == 3
+    assert report_data["Категория"].tolist() == ["Супермаркеты", "Супермаркеты", "Супермаркеты"]
+    assert report_data["Сумма"].tolist() == [100, 150, 200]
 
-    # Проверяем, что данные записаны в файл
 
-    # Ожидаем несколько вызовов write
-    write_calls = [
-        call('{'),
-        call('\n    '),
-        call('"data"'),
-        call(': '),
-        call('"sample report"'),
-        call('\n'),
-        call('}')
-    ]
-    mock_open_file().write.assert_has_calls(write_calls)
-
-    # Проверяем, логирование
-    mock_logging.assert_called_once_with(f"Отчет записан в файл: {filename}")
+if __name__ == "__main__":
+    pytest.main()

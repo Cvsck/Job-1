@@ -1,6 +1,8 @@
 import json
+
 import pandas as pd
-from src.utils import greet, get_cards, get_top_transactions, get_currency_rates, get_stock_prices
+
+from src.utils import get_cards, get_currency_rates, get_stock_prices, get_top_transactions, greet
 
 
 def main():
@@ -15,10 +17,11 @@ def main():
         "cards": get_cards(transactions),
         "top_transactions": get_top_transactions(transactions),
         "currency_rates": get_currency_rates(user_settings_path),
-        "stock_prices": get_stock_prices(user_settings_path)
+        "stock_prices": get_stock_prices(user_settings_path),
     }
 
     print(json.dumps(result, indent=4, ensure_ascii=False))
+
 
 if __name__ == "__main__":
     main()
