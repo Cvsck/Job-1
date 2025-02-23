@@ -1,22 +1,22 @@
-import json
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 from functools import wraps
 from typing import Optional
 
 import pandas as pd
 
-from config import excel_file_path
-
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
 
-
 # Декоратор для записи отчета в файл
-def log_report_to_file(filename: Optional[str] = None):
+def log_report_to_file(default_filename: Optional[str] = None):
     def decorator(func):
         @wraps(func)
-        def wrapper(filename=None, *args, **kwargs):
+        def wrapper(*args, **kwargs):
+            # Извлекаем имя файла из аргументов, если передано
+            filename = kwargs.pop('filename', default_filename)
+
             result = func(*args, **kwargs)
 
             # Если имя файла не передано, используем текущее время для имени файла
@@ -24,8 +24,7 @@ def log_report_to_file(filename: Optional[str] = None):
                 filename = f"../data/report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
 
             # Записываем результат в файл
-            with open(filename, "w", encoding="utf-8") as f:
-                json.dump(result, f, ensure_ascii=False, indent=4)
+            result.to_json(filename, orient="records", force_ascii=False, indent=4)
             logging.info(f"Отчет записан в файл: {filename}")
             return result
 
@@ -33,51 +32,41 @@ def log_report_to_file(filename: Optional[str] = None):
 
     return decorator
 
+# Функция для получения трат по категории за заданный период
+@log_report_to_file("../data/spending_by_category_report.json")  # Можно передать имя файла
+def spending_by_category(transaction_data: pd.DataFrame, category: str, start_date: Optional[str] = None, end_date: Optional[str] = None) -> pd.DataFrame:
+    # Если конечная дата не передана, используем текущую дату
+    if end_date is None:
+        end_date = datetime.now()
+    else:
+        # Преобразуем строку в объект datetime, если конечная дата передана
+        end_date = datetime.strptime(end_date, "%Y-%m-%d")
 
-# Функция для получения трат по категории за последние 3 месяца
-@log_report_to_file("spending_by_category_report.json")  # Можно передать имя файла
-def spending_by_category(transactions: pd.DataFrame, category: str, date: Optional[str] = None) -> dict:
-    # Если дата не передана, используем текущую дату
-    if date is None:
-        date = datetime.now().strftime("%Y-%m-%d")
-
-    # Преобразуем строку в объект datetime
-    date = datetime.strptime(date, "%Y-%m-%d")
+    # Если начальная дата не передана, используем дату 3 месяца назад
+    if start_date is None:
+        start_date = end_date - relativedelta(months=3)
+    else:
+        # Преобразуем строку в объект datetime, если начальная дата передана
+        start_date = datetime.strptime(start_date, "%Y-%m-%d")
 
     # Убедимся, что столбец 'Дата операции' преобразован в тип datetime
-    transactions["Дата операции"] = pd.to_datetime(transactions["Дата операции"], dayfirst=True, errors="coerce")
+    transaction_data["Дата операции"] = pd.to_datetime(transaction_data["Дата операции"], dayfirst=True, errors="coerce")
 
-    # Вычисляем дату 3 месяца назад
-    start_date = date - timedelta(days=90)
-
-    # Фильтруем транзакции по категории и дате
-    filtered_transactions = transactions[
-        (transactions["Категория"] == category) & (transactions["Дата операции"] >= start_date)
+    # Фильтруем транзакции по категории и диапазону дат
+    filtered_transactions = transaction_data[
+        (transaction_data["Категория"] == category) &
+        (transaction_data["Дата операции"] >= start_date) &
+        (transaction_data["Дата операции"] <= end_date)
     ]
 
-    # Возвращаем сумму трат по категории
-    total_spending = filtered_transactions["Сумма операции"].sum()
+    return filtered_transactions
 
-    # Создаём копию отфильтрованных данных
-    filtered_transactions = filtered_transactions.copy()
-
-    # Преобразуем 'Дата операции' в строку для JSON
-    filtered_transactions["Дата операции"] = filtered_transactions["Дата операции"].astype(str)
-
-    return {
-        "category": category,
-        "total_spending": total_spending,
-        "transactions": filtered_transactions[["Дата операции", "Сумма операции", "Описание"]].to_dict(
-            orient="records"
-        ),
-    }
-
-
-# Пример использования
+# Пример использования скрипта
 if __name__ == "__main__":
-    # Загружаем данные из Excel файла
-    df = pd.read_excel(excel_file_path)
+    # Здесь создаем пример DataFrame с транзакциями для тестирования
+    data_path = "C:/Users/Макс/my_prj/Job-1/data/operations.xlsx"
+    transactions = pd.read_excel(data_path)  # Используем pd.read_excel для чтения данных
 
-    # Пример вызова функции с категорией и датой
-    result = spending_by_category(transactions=df, category="Супермаркеты", date="2020-05-20")
-    print(result)
+    # Получаем отчет по категории "Еда" за 2021 год
+    report = spending_by_category(transactions, category="Супермаркеты", start_date="2021-01-01", end_date="2021-12-31")
+    print(report)

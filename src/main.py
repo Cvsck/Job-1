@@ -1,34 +1,24 @@
-import logging
-from datetime import datetime
-
-from config import excel_file_path
-from src.views import get_main_page
-
-# Настройка логирования
-logging.basicConfig(
-    filename="../logs/app.log",
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    encoding="utf-8",
-)
+import json
+import pandas as pd
+from src.utils import greet, get_cards, get_top_transactions, get_currency_rates, get_stock_prices
 
 
 def main():
-    # Путь к файлу с транзакциями
-    transactions_file_path = excel_file_path
+    # Загрузить данные из Excel файла
+    transactions_data_path = "C:/Users/Макс/my_prj/Job-1/data/operations.xlsx"
+    transactions = pd.read_excel(transactions_data_path)
 
-    # Параметры для анализа (год и месяц)
-    current_year = datetime.now().year
-    current_month = datetime.now().month
+    user_settings_path = "C:/Users/Макс/my_prj/Job-1/data/user_settings.json"
 
-    logging.info(f"Запуск программы {current_month}/{current_year}.")
+    result = {
+        "greeting": greet(),
+        "cards": get_cards(transactions),
+        "top_transactions": get_top_transactions(transactions),
+        "currency_rates": get_currency_rates(user_settings_path),
+        "stock_prices": get_stock_prices(user_settings_path)
+    }
 
-    logging.info("Получаем данные для главной страницы")
-    main_page = get_main_page(date=datetime.now().strftime("%Y-%m-%d"), transactions_path=transactions_file_path)
-    logging.info(main_page)  # Логируем результат
-
-    print(main_page)  # Выводим результат на экран
-
+    print(json.dumps(result, indent=4, ensure_ascii=False))
 
 if __name__ == "__main__":
     main()
