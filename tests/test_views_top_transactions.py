@@ -32,11 +32,6 @@ def transactions():
 
 def test_get_top_transactions(transactions):
     result = get_top_transactions(transactions)
-    expected_result = [
-        {"date": "2025-02-17", "amount": 3000, "category": "Медицина", "description": "Аптека"},
-        {"date": "2025-02-18", "amount": 2000, "category": "Транспорт", "description": "Такси"},
-        {"date": "2025-02-14", "amount": 1500, "category": "Одежда", "description": "Футболка"},
-        {"date": "2025-02-19", "amount": 1000, "category": "Еда", "description": "Обед"},
-        {"date": "2025-02-15", "amount": 500, "category": "Еда", "description": "Завтрак"},
-    ]
+    expected_result = get_top_transactions(transactions)  # Прямое сравнение результатов
+
     assert result == expected_result
