@@ -1,8 +1,14 @@
 import json
+import logging
 from datetime import datetime
+from functools import reduce
 from typing import Any, Dict, List, Optional
 
 from openpyxl import load_workbook
+
+# Настройка логирования
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 
 
 def parse_date(date_str: Optional[str]) -> Optional[datetime]:
@@ -20,32 +26,31 @@ def parse_date(date_str: Optional[str]) -> Optional[datetime]:
 
 def filter_transactions_by_date(transactions: List[Dict[str, Any]], year: int, month: int) -> List[Dict[str, Any]]:
     """Фильтрация транзакций по году и месяцу."""
-    return [
-        record
-        for record in transactions
-        if record["Дата операции"]
-        and isinstance(record["Дата операции"], datetime)
-        and record["Дата операции"].year == year
-        and record["Дата операции"].month == month
-        and abs(record["Сумма операции"]) >= 1
-    ]
+    return list(
+        filter(
+            lambda record: record["Дата операции"]
+            and isinstance(record["Дата операции"], datetime)
+            and record["Дата операции"].year == year
+            and record["Дата операции"].month == month
+            and abs(record["Сумма операции"]) >= 1,
+            transactions,
+        )
+    )
 
 
 def calculate_cashback_by_category(filtered_transactions: List[Dict[str, Any]]) -> Dict[str, float]:
     """Расчет кешбэка по категориям."""
-    cashback_by_category = {}
     cashback_rate = 0.01
 
-    for transaction in filtered_transactions:
-        category = transaction["Категория"]
-        amount = abs(transaction["Сумма операции"])
-
-        cashback = amount * cashback_rate
-
-        if category in cashback_by_category:
-            cashback_by_category[category] += cashback
-        else:
-            cashback_by_category[category] = cashback
+    cashback_by_category = reduce(
+        lambda acc, transaction: {
+            **acc,
+            transaction["Категория"]: acc.get(transaction["Категория"], 0)
+            + abs(transaction["Сумма операции"]) * cashback_rate,
+        },
+        filtered_transactions,
+        {},
+    )
 
     # Сортировка категорий по убыванию кешбэка
     sorted_cashback_by_category = dict(sorted(cashback_by_category.items(), key=lambda item: item[1], reverse=True))
@@ -57,15 +62,24 @@ def analyze_cashback_categories(
     transactions_data: List[Dict[str, Any]], filter_year: int, filter_month: int
 ) -> Dict[str, float]:
     """Основная функция анализа кешбэка по категориям."""
-    for record in transactions_data:
-        record["Дата операции"] = parse_date(record.get("Дата операции") or record.get("Дата платежа"))
+    transactions_data = list(
+        map(
+            lambda record: {
+                **record,
+                "Дата операции": parse_date(record.get("Дата операции") or record.get("Дата платежа")),
+            },
+            transactions_data,
+        )
+    )
 
     filtered_transactions = filter_transactions_by_date(transactions_data, filter_year, filter_month)
 
     if not filtered_transactions:
+        logger.warning(f"Транзакции не найдены за {filter_year}-{filter_month}")
         return {}
 
     cashback_by_category = calculate_cashback_by_category(filtered_transactions)
+    logger.info(f"Завершен анализ категорий кешбэка за {filter_year}-{filter_month}")
     return cashback_by_category
 
 
@@ -75,10 +89,9 @@ def load_data_from_excel(file_path: str) -> List[Dict[str, Any]]:
     sheet = workbook.active
 
     header = [cell.value for cell in sheet[1]]
-    data = []
-    for row in sheet.iter_rows(min_row=2, values_only=True):
-        data.append(dict(zip(header, row)))
+    data = [dict(zip(header, row)) for row in sheet.iter_rows(min_row=2, values_only=True)]
 
+    logger.info(f"Загружено {len(data)} записей из {file_path}")
     return data
 
 
@@ -86,13 +99,14 @@ def save_result_to_file(result: Dict[str, float], file_path: str) -> None:
     """Сохранение результата в файл JSON."""
     with open(file_path, "w", encoding="utf-8") as file:
         json.dump(result, file, ensure_ascii=False, indent=4)
+    logger.info(f"Результаты сохранены в файл {file_path}")
 
 
 if __name__ == "__main__":
     # Здесь вы можете указать путь к вашему Excel файлу и указать выходной путь для JSON файла
     excel_file_path = "C:/Users/Макс/my_prj/Job-1/data/operations.xlsx"
     json_output_path = "../data/cashback_results.json"
-    year_input = 2021
+    year_input = 2020
     month_input = 2
 
     transactions_input = load_data_from_excel(excel_file_path)

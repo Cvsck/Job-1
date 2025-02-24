@@ -15,6 +15,7 @@ def log_report_to_file(default_filename: Optional[str] = None):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
+            logging.info(f"Вызов функции {func.__name__} с аргументами: {args}, {kwargs}")
             filename = kwargs.pop("filename", default_filename)
 
             result = func(*args, **kwargs)
@@ -36,6 +37,8 @@ def log_report_to_file(default_filename: Optional[str] = None):
 def spending_by_category(
     transaction_data: pd.DataFrame, category: str, start_date: Optional[str] = None, end_date: Optional[str] = None
 ) -> pd.DataFrame:
+    logging.info(f"Фильтрация транзакций по категории: {category}")
+
     if end_date is None:
         end_date = datetime.now()
     else:
@@ -45,6 +48,8 @@ def spending_by_category(
         start_date = end_date - relativedelta(months=3)
     else:
         start_date = datetime.strptime(start_date, "%Y-%m-%d")
+
+    logging.info(f"Период фильтрации: с {start_date} по {end_date}")
 
     # Преобразуем столбец 'Дата операции' в datetime и игнорируем некорректные значения
     transaction_data["Дата операции"] = pd.to_datetime(
@@ -60,15 +65,24 @@ def spending_by_category(
         & (transaction_data["Дата операции"] <= end_date)
     ]
 
+    logging.info(f"Количество найденных транзакций: {len(filtered_transactions)}")
+
     return filtered_transactions
 
 
 # Пример использования скрипта
 if __name__ == "__main__":
+    logging.info("Начало выполнения скрипта")
+
     data_path = "C:/Users/Макс/my_prj/Job-1/data/operations.xlsx"
+    logging.info(f"Загрузка данных из файла: {data_path}")
     transactions = pd.read_excel(data_path)
 
     report = spending_by_category(
         transactions, category="Супермаркеты", start_date="2021-01-01", end_date="2021-12-31"
     )
+
+    logging.info("Генерация отчета завершена")
     print(report)
+
+    logging.info("Конец выполнения скрипта")
