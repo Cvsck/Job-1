@@ -1,0 +1,91 @@
+{
+    "greeting": "Добрый вечер",
+    "cards": [
+        {
+            "last_digits": "5091",
+            "total_spent": -13911.37,
+            "cashback": -161.0
+        },
+        {
+            "last_digits": "7197",
+            "total_spent": -19921.69,
+            "cashback": -241.0
+        },
+        {
+            "last_digits": "nan",
+            "total_spent": -64030.55,
+            "cashback": -643.0
+        },
+        {
+            "last_digits": "4556",
+            "total_spent": -952.9,
+            "cashback": -11.0
+        }
+    ],
+    "top_transactions": [
+        {
+            "date": "22.12.2021 23:30:45",
+            "amount": 28001.94,
+            "category": "Переводы",
+            "description": "Перевод Кредитная карта. ТП 10.2 RUR"
+        },
+        {
+            "date": "23.12.2021 16:45:12",
+            "amount": 20000.0,
+            "category": "Другое",
+            "description": "Иван С."
+        },
+        {
+            "date": "05.12.2021 15:20:00",
+            "amount": 3500.0,
+            "category": "Пополнения",
+            "description": "Внесение наличных через банкомат Тинькофф"
+        },
+        {
+            "date": "12.12.2021 15:03:30",
+            "amount": 1721.38,
+            "category": "Каршеринг",
+            "description": "Ситидрайв"
+        },
+        {
+            "date": "21.12.2021 12:39:51",
+            "amount": 1198.23,
+            "category": "Переводы",
+            "description": "Перевод Кредитная карта. ТП 10.2 RUR"
+        }
+    ],
+    "currency_rates": [
+        {
+            "currency": "USD",
+            "rate": 87.92
+        },
+        {
+            "currency": "EUR",
+            "rate": 92.07
+        }
+    ],
+    "stock_prices": {
+        "stock_prices": [
+            {
+                "stock": "AAPL",
+                "price": 247.565
+            },
+            {
+                "stock": "AMZN",
+                "price": 210.91
+            },
+            {
+                "stock": "GOOGL",
+                "price": 176.84
+            },
+            {
+                "stock": "MSFT",
+                "price": 397.8
+            },
+            {
+                "stock": "TSLA",
+                "price": 299.87
+            }
+        ]
+    }
+}

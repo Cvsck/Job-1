@@ -32,11 +32,13 @@ def log_report_to_file(default_filename: Optional[str] = None):
     return decorator
 
 
-# Функция для получения трат по категории за заданный период
 @log_report_to_file("../data/spending_by_category_report.json")
 def spending_by_category(
     transaction_data: pd.DataFrame, category: str, start_date: Optional[str] = None, end_date: Optional[str] = None
 ) -> pd.DataFrame:
+    """
+    Функция для получения трат по категории за заданный период
+    """
     logging.info(f"Фильтрация транзакций по категории: {category}")
 
     if end_date is None:
@@ -68,21 +70,3 @@ def spending_by_category(
     logging.info(f"Количество найденных транзакций: {len(filtered_transactions)}")
 
     return filtered_transactions
-
-
-# Пример использования скрипта
-if __name__ == "__main__":
-    logging.info("Начало выполнения скрипта")
-
-    data_path = "C:/Users/Макс/my_prj/Job-1/data/operations.xlsx"
-    logging.info(f"Загрузка данных из файла: {data_path}")
-    transactions = pd.read_excel(data_path)
-
-    report = spending_by_category(
-        transactions, category="Супермаркеты", start_date="2021-01-01", end_date="2021-12-31"
-    )
-
-    logging.info("Генерация отчета завершена")
-    print(report)
-
-    logging.info("Конец выполнения скрипта")

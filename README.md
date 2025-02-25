@@ -29,7 +29,7 @@ main
 reports
 services
 utils
-views
+
 '''
 3. Приведение модулей к PEP8:
 '''
@@ -40,3 +40,4 @@ black src/main.py
 mypy src/main.py
 '''
 4. В папке Tests добавлены тесты к модулям
+5. 
