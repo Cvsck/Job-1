@@ -1,11 +1,20 @@
-# Job-1
-1.  Организация проекта
-'''
+# Создание виртуального окружения
 python -m venv .venv
-.venv\Scripts\activate (на Windows:)
+
+# Активация виртуального окружения (на Windows)
+.venv\Scripts\activate
+
+# Push в основную ветку и ветку разработки
 git push origin main
 git push origin develop
+
+# Создание init файла для src
 New-Item -Path 'src/__init__.py' -ItemType File
+
+# Создание init файла для тестов
+New-Item -Path 'tests/__init__.py' -ItemType File
+
+# Установка необходимых пакетов
 pip install isort
 pip install black
 pip install flake8
@@ -20,24 +29,18 @@ python -m pip install eodhd -U
 pip install pytest
 pip install pytest-cov
 pip install pytest-html
-pytest --cov=src --cov-report=html:htmlcov --html=report.html
 
-'''
-2. Создание модулей:
-'''
+# Запуск тестов с отчетом покрытия и HTML отчетом
+pytest --cov=src --cov-report=html:htmlcov --html=report.html
+# Создание модулей
 main
 reports
 services
 utils
-
-'''
-3. Приведение модулей к PEP8:
-'''
-Пример:
+# Приведение модулей к PEP8
+# Пример использования инструментов для приведения кода к стандарту PEP8
 flake8 src/main.py
 isort src/main.py
 black src/main.py
 mypy src/main.py
-'''
-4. В папке Tests добавлены тесты к модулям
-5. 
+# В папке Tests добавлены тесты к модулям
