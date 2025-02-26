@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+
 from src.utils import get_top_transactions  # импортируем функцию из вашего модуля
 
 

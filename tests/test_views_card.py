@@ -1,6 +1,8 @@
 import pandas as pd
 import pytest
+
 from src.utils import get_cards
+
 
 @pytest.mark.parametrize(
     "transactions, expected",
