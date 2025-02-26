@@ -1,52 +1,35 @@
-# -*- coding: utf-8 -*-
-import os
-from unittest.mock import Mock
+import json
+from unittest.mock import mock_open, patch
 
 import requests
 
-
-def get_stock_prices(stock_list: list) -> dict:
-    api_key = os.environ.get("api_stock")
-
-    if not api_key:
-        print("Ошибка: API ключ не найден. Убедитесь, что он задан в переменной окружении.")
-        return {"stock_prices": []}
-
-    stock_prices = []
-    for stock in stock_list:
-        url = f"https://eodhd.com/api/real-time/{stock}.US?api_token={api_key}&fmt=json"
-        response = requests.get(url)
-
-        if response.status_code != 200:
-            print(f"Ошибка запроса: статус {response.status_code} для {stock}")
-            continue
-
-        response_data = response.json()
-
-        if response_data.get("code") != f"{stock}.US":
-            print(f"Ошибка: не удалось получить данные для {stock}")
-            continue
-
-        stock_info = {
-            "stock": stock,
-            "price": response_data.get("close"),  # Используем поле "close" для получения текущей цены
-        }
-
-        stock_prices.append(stock_info)
-
-    return {"stock_prices": stock_prices}
+from src.utils import get_stock_prices  # Замените your_module на актуальный путь к вашему модулю
 
 
-def test_successful_response():
-    os.environ["api_stock"] = "fake_api_key"
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = {"code": "AAPL.US", "close": 150.0}
-    requests.get = Mock(return_value=mock_response)
+@patch("requests.get")
+@patch("builtins.open", new_callable=mock_open, read_data='{"user_stocks": ["AAPL", "AMZN"]}')
+def test_get_stock_prices(mock_open, mock_get):
+    def mock_get_side_effect(url):
+        if "AAPL" in url:
+            return MockResponse({"code": "AAPL.US", "close": 150.0}, 200)
+        elif "AMZN" in url:
+            return MockResponse({"code": "AMZN.US", "close": 3300.0}, 200)
 
-    result = get_stock_prices(["AAPL"])
-    assert result == {"stock_prices": [{"stock": "AAPL", "price": 150.0}]}
+    mock_get.side_effect = mock_get_side_effect
+
+    expected_result = {"stock_prices": [{"stock": "AAPL", "price": 150.0}, {"stock": "AMZN", "price": 3300.0}]}
+
+    # Передаем любой путь, так как содержимое файла мокируется
+    assert get_stock_prices("dummy_path") == expected_result
 
 
-# Запускаем тест
-test_successful_response()
+# Вспомогательная функция для мока ответов
+def MockResponse(json_data, status_code=200):
+    response = requests.Response()
+    response.status_code = 200
+    response._content = json.dumps(json_data).encode()
+    return response
+
+
+# Вызов функции тестирования
+test_get_stock_prices()

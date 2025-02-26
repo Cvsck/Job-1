@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 from datetime import datetime
 
@@ -25,7 +26,7 @@ def get_cards(transactions: pd.DataFrame) -> list:
     card_data = {}
     for _, row in transactions.iterrows():
         card_number = row["Номер карты"]
-        if row["Статус"] == "OK" and row["Сумма операции"] > 0:
+        if row["Статус"] == "OK" and row["Сумма операции"] < 0:
             card_number = str(card_number).replace(" ", "")
             last_4_digits = card_number[-4:]
 
@@ -71,7 +72,8 @@ def get_currency_rates(user_settings_path: str) -> list:
         user_settings = json.load(f)
 
     # Берем только доллар и евро из JSON файла
-    currencies = [currency for currency in user_settings.get("currencies", []) if currency in ["USD", "EUR"]]
+    currencies = [currency for currency in user_settings.get("user_currencies", []) if currency in ["USD", "EUR"]]
+    logging.info(f"Валюты для обработки: {currencies}")
     api_key = os.getenv("API_KEY")
     currency_rates = []
 
@@ -81,7 +83,7 @@ def get_currency_rates(user_settings_path: str) -> list:
         data = response.json()
 
         # Логирование ответа
-        print(f"Ответ от API для {currency}: {data}")
+        logging.info(f"Ответ от API для {currency}: {data}")
 
         if "conversion_rates" in data:
             rate = round(data["conversion_rates"].get("RUB", 0.0), 2)
@@ -94,7 +96,7 @@ def get_stock_prices(user_settings_path: str) -> dict:
     with open(user_settings_path, "r") as f:
         user_settings = json.load(f)
 
-    stocks = user_settings.get("stocks", ["AAPL", "AMZN", "GOOGL", "MSFT", "TSLA"])
+    stocks = user_settings.get("user_stocks", ["AAPL", "AMZN", "GOOGL", "MSFT", "TSLA"])
     api_key = os.environ.get("api_stock")
 
     if not api_key:

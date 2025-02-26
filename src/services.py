@@ -100,15 +100,3 @@ def save_result_to_file(result: Dict[str, float], file_path: str) -> None:
     with open(file_path, "w", encoding="utf-8") as file:
         json.dump(result, file, ensure_ascii=False, indent=4)
     logger.info(f"Результаты сохранены в файл {file_path}")
-
-
-if __name__ == "__main__":
-    # Здесь вы можете указать путь к вашему Excel файлу и указать выходной путь для JSON файла
-    excel_file_path = "C:/Users/Макс/my_prj/Job-1/data/operations.xlsx"
-    json_output_path = "../data/cashback_results.json"
-    year_input = 2020
-    month_input = 2
-
-    transactions_input = load_data_from_excel(excel_file_path)
-    cashback_results = analyze_cashback_categories(transactions_input, year_input, month_input)
-    save_result_to_file(cashback_results, json_output_path)

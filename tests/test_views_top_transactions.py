@@ -1,21 +1,7 @@
 import pandas as pd
 import pytest
 
-
-def get_top_transactions(transactions: pd.DataFrame) -> list:
-    successful_transactions = transactions[transactions["Статус"] == "OK"]
-    top_transactions = successful_transactions.sort_values(by="Сумма платежа", ascending=False).head(5)
-
-    top_transactions_list = [
-        {
-            "date": row["Дата операции"],
-            "amount": row["Сумма платежа"],
-            "category": row["Категория"],
-            "description": row["Описание"],
-        }
-        for _, row in top_transactions.iterrows()
-    ]
-    return top_transactions_list
+from src.utils import get_top_transactions  # импортируем функцию из вашего модуля
 
 
 @pytest.fixture
@@ -23,7 +9,7 @@ def transactions():
     data = {
         "Дата операции": ["2025-02-19", "2025-02-18", "2025-02-17", "2025-02-16", "2025-02-15", "2025-02-14"],
         "Статус": ["OK", "OK", "OK", "Failed", "OK", "OK"],
-        "Сумма платежа": [1000, 2000, 3000, 4000, 500, 1500],
+        "Сумма операции": [1000, 2000, 3000, 4000, 500, 1500],
         "Категория": ["Еда", "Транспорт", "Медицина", "Развлечения", "Еда", "Одежда"],
         "Описание": ["Обед", "Такси", "Аптека", "Кино", "Завтрак", "Футболка"],
     }
@@ -32,6 +18,5 @@ def transactions():
 
 def test_get_top_transactions(transactions):
     result = get_top_transactions(transactions)
-    expected_result = get_top_transactions(transactions)  # Прямое сравнение результатов
 
-    assert result == expected_result
+    assert len(result) == 5  # Проверяем, что в результате 5 транзакций
