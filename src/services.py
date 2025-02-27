@@ -32,10 +32,11 @@ def filter_transactions_by_date(transactions: List[Dict[str, Any]], year: int, m
             and isinstance(record["Дата операции"], datetime)
             and record["Дата операции"].year == year
             and record["Дата операции"].month == month
-            and abs(record["Сумма операции"]) >= 1,
+            and record["Сумма операции"] < 0,
             transactions,
         )
     )
+
 
 
 def calculate_cashback_by_category(filtered_transactions: List[Dict[str, Any]]) -> Dict[str, float]:
